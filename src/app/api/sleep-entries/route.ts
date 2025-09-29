@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@/generated/prisma";
+// import { PrismaClient } from "@/generated/prisma";
 
 // For now, we'll create a mock response since we don't have a real database yet
 // This will be updated once you add the Neon database URL
