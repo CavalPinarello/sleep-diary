@@ -1,8 +1,12 @@
+"use client";
+
 import { ReactNode } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { signOut, useSession } from "next-auth/react";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
+  const { data: session } = useSession();
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="bg-white border-b">
@@ -24,9 +28,20 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 </Link>
               </nav>
             </div>
-            <Button variant="outline" size="sm">
-              Sign Out
-            </Button>
+            <div className="flex items-center gap-4">
+              {session?.user && (
+                <span className="text-sm text-muted-foreground">
+                  {session.user.email}
+                </span>
+              )}
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => signOut({ callbackUrl: '/auth/login' })}
+              >
+                Sign Out
+              </Button>
+            </div>
           </div>
         </div>
       </header>

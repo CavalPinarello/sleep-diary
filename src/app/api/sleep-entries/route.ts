@@ -3,18 +3,38 @@ import { PrismaClient } from "@/generated/prisma";
 
 const prisma = new PrismaClient();
 
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth/auth.config";
+
 export async function GET(_request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    
     // Try to fetch real entries from database
     let entries = [];
     let error = null;
     
     try {
-      // For now, we'll skip user filtering since auth is bypassed
-      entries = await prisma.sleepEntry.findMany({
-        orderBy: { date: 'desc' },
-        take: 10,
-      });
+      if (session?.user?.id) {
+        // Fetch entries for logged-in user
+        entries = await prisma.sleepEntry.findMany({
+          where: { userId: session.user.id },
+          orderBy: { date: 'desc' },
+          take: 10,
+        });
+      } else {
+        // Fallback: fetch test user entries if not logged in
+        const testUser = await prisma.user.findFirst({
+          where: { email: "test@example.com" }
+        });
+        if (testUser) {
+          entries = await prisma.sleepEntry.findMany({
+            where: { userId: testUser.id },
+            orderBy: { date: 'desc' },
+            take: 10,
+          });
+        }
+      }
       console.log("[API] Fetched entries from database:", entries.length);
     } catch (dbError) {
       console.error("[API] Database error:", dbError);
@@ -51,6 +71,7 @@ export async function GET(_request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
     const body = await request.json();
     console.log("[API] Received sleep entry data:", body);
     
@@ -69,23 +90,31 @@ export async function POST(request: NextRequest) {
         wakeDateTime.setDate(wakeDateTime.getDate() + 1);
       }
       
-      // Get or create test user
-      let user = await prisma.user.findFirst({
-        where: { email: "test@example.com" }
-      });
+      let userId: string;
       
-      if (!user) {
-        user = await prisma.user.create({
-          data: {
-            email: "test@example.com",
-            name: "Test User",
-          },
+      if (session?.user?.id) {
+        // Use authenticated user's ID
+        userId = session.user.id;
+      } else {
+        // Fallback: use test user if not logged in
+        let user = await prisma.user.findFirst({
+          where: { email: "test@example.com" }
         });
+        
+        if (!user) {
+          user = await prisma.user.create({
+            data: {
+              email: "test@example.com",
+              name: "Test User",
+            },
+          });
+        }
+        userId = user.id;
       }
       
       savedEntry = await prisma.sleepEntry.create({
         data: {
-          userId: user.id, // Use the actual user ID
+          userId: userId,
           date: dateTime,
           bedTime: bedDateTime,
           wakeTime: wakeDateTime,
