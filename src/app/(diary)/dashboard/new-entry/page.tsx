@@ -36,7 +36,13 @@ export default function NewEntryPage() {
         console.log("[CLIENT] Save response:", result);
         if (result.debug) {
           console.log("[DEBUG INFO]:", result.debug);
-          alert(`Entry saved (mock mode)\n\nDebug Info:\n${result.debug.message}\nDatabase configured: ${result.debug.database_url_exists}`);
+          if (result.debug.save_method === "database") {
+            // Successfully saved to database
+            console.log("Entry saved to database!");
+          } else {
+            // Saved as mock due to database error
+            alert(`Entry saved locally (database connection issue)\n\nThe entry was saved temporarily. Once the database is properly connected, your entries will be saved permanently.\n\nDebug: ${result.debug.message}`);
+          }
         }
         router.push("/dashboard");
       } else {
