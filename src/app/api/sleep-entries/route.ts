@@ -1,32 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
-// import { PrismaClient } from "@/generated/prisma";
+import { PrismaClient } from "@prisma/client";
 
-// For now, we'll create a mock response since we don't have a real database yet
-// This will be updated once you add the Neon database URL
+const prisma = new PrismaClient();
 
 export async function GET(request: NextRequest) {
   try {
-    // Mock data for testing
-    const mockEntries = [
-      {
-        id: "1",
-        date: new Date("2024-12-28"),
-        bedTime: new Date("2024-12-28T23:30:00"),
-        wakeTime: new Date("2024-12-29T07:00:00"),
-        sleepQuality: 9,
-        notes: "Felt great!",
-      },
-      {
-        id: "2",
-        date: new Date("2024-12-27"),
-        bedTime: new Date("2024-12-27T00:00:00"),
-        wakeTime: new Date("2024-12-27T07:30:00"),
-        sleepQuality: 7,
-        notes: "Okay sleep",
-      },
-    ];
+    // Try to fetch real entries from database
+    let entries = [];
+    let error = null;
+    
+    try {
+      // For now, we'll skip user filtering since auth is bypassed
+      entries = await prisma.sleepEntry.findMany({
+        orderBy: { date: 'desc' },
+        take: 10,
+      });
+      console.log("[API] Fetched entries from database:", entries.length);
+    } catch (dbError) {
+      console.error("[API] Database error:", dbError);
+      error = String(dbError);
+      // Fall back to mock data if database fails
+      entries = [
+        {
+          id: "mock-1",
+          userId: "test",
+          date: new Date("2024-12-28"),
+          bedTime: new Date("2024-12-28T23:30:00"),
+          wakeTime: new Date("2024-12-29T07:00:00"),
+          sleepQuality: 9,
+          notes: "Felt great!",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ];
+    }
 
-    return NextResponse.json({ entries: mockEntries });
+    return NextResponse.json({ 
+      entries,
+      database_connected: !error,
+      error: error,
+    });
   } catch (error) {
     console.error("Error fetching sleep entries:", error);
     return NextResponse.json(
@@ -40,26 +53,54 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     console.log("[API] Received sleep entry data:", body);
-    console.log("[API] DATABASE_URL exists:", !!process.env.DATABASE_URL);
-    console.log("[API] DATABASE_URL length:", process.env.DATABASE_URL?.length || 0);
     
-    // For now, just return the data back as if it was saved
-    const mockEntry = {
-      id: Math.random().toString(),
-      ...body,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      status: "mock_saved",
-      database_configured: !!process.env.DATABASE_URL,
-    };
+    let savedEntry = null;
+    let saveError = null;
+    let saveMethod = "mock";
+    
+    try {
+      // Try to save to real database
+      const dateTime = new Date(body.date + 'T00:00:00');
+      const bedDateTime = new Date(body.date + 'T' + body.bedTime);
+      const wakeDateTime = new Date(body.date + 'T' + body.wakeTime);
+      
+      // If wake time is before bed time, assume next day
+      if (wakeDateTime <= bedDateTime) {
+        wakeDateTime.setDate(wakeDateTime.getDate() + 1);
+      }
+      
+      savedEntry = await prisma.sleepEntry.create({
+        data: {
+          userId: "test-user", // Temporary since auth is bypassed
+          date: dateTime,
+          bedTime: bedDateTime,
+          wakeTime: wakeDateTime,
+          sleepQuality: body.sleepQuality,
+          notes: body.notes || null,
+        },
+      });
+      saveMethod = "database";
+      console.log("[API] Saved to database:", savedEntry.id);
+    } catch (dbError) {
+      console.error("[API] Database save error:", dbError);
+      saveError = String(dbError);
+      
+      // Fall back to mock save
+      savedEntry = {
+        id: Math.random().toString(),
+        ...body,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      saveMethod = "mock";
+    }
 
-    console.log("[API] Returning mock entry:", mockEntry);
     return NextResponse.json({ 
-      entry: mockEntry,
+      entry: savedEntry,
       debug: {
-        database_url_exists: !!process.env.DATABASE_URL,
-        database_url_starts_with: process.env.DATABASE_URL?.substring(0, 10),
-        message: "Entry saved as mock data - database not yet connected"
+        save_method: saveMethod,
+        database_error: saveError,
+        message: saveMethod === "database" ? "Entry saved to database!" : "Entry saved as mock data (database error)"
       }
     });
   } catch (error) {
