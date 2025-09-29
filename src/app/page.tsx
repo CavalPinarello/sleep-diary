@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 
 export default function Home() {
-  redirect("/auth/login");
+  // Temporarily bypass auth for testing
+  redirect("/dashboard");
+  // redirect("/auth/login");
 }
