@@ -39,6 +39,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    console.log("[API] Received sleep entry data:", body);
+    console.log("[API] DATABASE_URL exists:", !!process.env.DATABASE_URL);
+    console.log("[API] DATABASE_URL length:", process.env.DATABASE_URL?.length || 0);
     
     // For now, just return the data back as if it was saved
     const mockEntry = {
@@ -46,13 +49,23 @@ export async function POST(request: NextRequest) {
       ...body,
       createdAt: new Date(),
       updatedAt: new Date(),
+      status: "mock_saved",
+      database_configured: !!process.env.DATABASE_URL,
     };
 
-    return NextResponse.json({ entry: mockEntry });
+    console.log("[API] Returning mock entry:", mockEntry);
+    return NextResponse.json({ 
+      entry: mockEntry,
+      debug: {
+        database_url_exists: !!process.env.DATABASE_URL,
+        database_url_starts_with: process.env.DATABASE_URL?.substring(0, 10),
+        message: "Entry saved as mock data - database not yet connected"
+      }
+    });
   } catch (error) {
     console.error("Error creating sleep entry:", error);
     return NextResponse.json(
-      { error: "Failed to create entry" },
+      { error: "Failed to create entry", details: String(error) },
       { status: 500 }
     );
   }

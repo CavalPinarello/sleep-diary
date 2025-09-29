@@ -32,9 +32,17 @@ export default function NewEntryPage() {
       });
 
       if (response.ok) {
+        const result = await response.json();
+        console.log("[CLIENT] Save response:", result);
+        if (result.debug) {
+          console.log("[DEBUG INFO]:", result.debug);
+          alert(`Entry saved (mock mode)\n\nDebug Info:\n${result.debug.message}\nDatabase configured: ${result.debug.database_url_exists}`);
+        }
         router.push("/dashboard");
       } else {
-        alert("Failed to save entry. Please try again.");
+        const errorData = await response.json();
+        console.error("[CLIENT] Save failed:", errorData);
+        alert(`Failed to save entry. Error: ${errorData.error}\nDetails: ${errorData.details || 'Unknown error'}`);
       }
     } catch (error) {
       console.error("Error saving entry:", error);
