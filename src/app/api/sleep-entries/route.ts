@@ -69,9 +69,23 @@ export async function POST(request: NextRequest) {
         wakeDateTime.setDate(wakeDateTime.getDate() + 1);
       }
       
+      // Get or create test user
+      let user = await prisma.user.findFirst({
+        where: { email: "test@example.com" }
+      });
+      
+      if (!user) {
+        user = await prisma.user.create({
+          data: {
+            email: "test@example.com",
+            name: "Test User",
+          },
+        });
+      }
+      
       savedEntry = await prisma.sleepEntry.create({
         data: {
-          userId: "test-user", // Temporary since auth is bypassed
+          userId: user.id, // Use the actual user ID
           date: dateTime,
           bedTime: bedDateTime,
           wakeTime: wakeDateTime,
