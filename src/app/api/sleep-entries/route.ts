@@ -11,8 +11,8 @@ export async function GET(_request: NextRequest) {
     const session = await getServerSession(authOptions);
     
     // Try to fetch real entries from database
-    let entries = [];
-    let error = null;
+    let entries: any[] = [];
+    let error: string | null = null;
     
     try {
       if (session?.user?.id) {
