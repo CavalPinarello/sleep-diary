@@ -140,7 +140,9 @@ export async function POST(request: NextRequest) {
       saveError = JSON.stringify({
         name: (dbError as Error).name,
         message: (dbError as Error).message,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         code: (dbError as any).code,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         meta: (dbError as any).meta,
       });
       
