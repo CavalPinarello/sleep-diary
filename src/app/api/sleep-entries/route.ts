@@ -161,6 +161,8 @@ export async function POST(request: NextRequest) {
       debug: {
         save_method: saveMethod,
         database_error: saveError,
+        database_error_details: saveError ? JSON.parse(saveError) : null,
+        session_user_id: session?.user?.id || null,
         message: saveMethod === "database" ? "Entry saved to database!" : "Entry saved as mock data (database error)"
       }
     });
