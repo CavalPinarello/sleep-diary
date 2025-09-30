@@ -11,6 +11,7 @@ export async function GET(_request: NextRequest) {
     const session = await getServerSession(authOptions);
     
     // Try to fetch real entries from database
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let entries: any[] = [];
     let error: string | null = null;
     
