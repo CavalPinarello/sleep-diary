@@ -127,7 +127,22 @@ export async function POST(request: NextRequest) {
       console.log("[API] Saved to database:", savedEntry.id);
     } catch (dbError) {
       console.error("[API] Database save error:", dbError);
-      saveError = String(dbError);
+      console.error("[API] Error name:", (dbError as Error).name);
+      console.error("[API] Error message:", (dbError as Error).message);
+      console.error("[API] Error stack:", (dbError as Error).stack);
+      console.error("[API] User ID:", session?.user?.id);
+      console.error("[API] Date values:", {
+        date: new Date(body.date + 'T00:00:00'),
+        bedTime: new Date(body.date + 'T' + body.bedTime),
+        wakeTime: new Date(body.date + 'T' + body.wakeTime),
+      });
+      
+      saveError = JSON.stringify({
+        name: (dbError as Error).name,
+        message: (dbError as Error).message,
+        code: (dbError as any).code,
+        meta: (dbError as any).meta,
+      });
       
       // Fall back to mock save
       savedEntry = {
