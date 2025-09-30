@@ -113,8 +113,21 @@ export async function POST(request: NextRequest) {
         userId = user.id;
       }
       
-      savedEntry = await prisma.sleepEntry.create({
-        data: {
+      // Use upsert to create or update entry for this date
+      savedEntry = await prisma.sleepEntry.upsert({
+        where: {
+          userId_date: {
+            userId: userId,
+            date: dateTime,
+          },
+        },
+        update: {
+          bedTime: bedDateTime,
+          wakeTime: wakeDateTime,
+          sleepQuality: body.sleepQuality,
+          notes: body.notes || null,
+        },
+        create: {
           userId: userId,
           date: dateTime,
           bedTime: bedDateTime,
