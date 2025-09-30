@@ -62,7 +62,7 @@ model VerificationToken {
 model SleepEntry {
   id           String   @id @default(cuid())
   userId       String
-  date         DateTime @unique
+  date         DateTime
   bedTime      DateTime
   wakeTime     DateTime
   sleepQuality Int      // 1-10 scale
@@ -72,5 +72,6 @@ model SleepEntry {
   
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   
+  @@unique([userId, date])
   @@index([userId, date])
 }
