@@ -41,3 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# Specify AI agent artifacts (may contain credentials/tokens)
+.SleepDiary/.claude/
+.claude/

@@ -1,95 +1,132 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BarChart3, Activity, Calendar, Plus } from "lucide-react";
 import Link from "next/link";
+
+import { AnalyticsDashboard, AnalyticsSummary } from "@/components/analytics/analytics-dashboard";
 
 export default function DashboardPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Sleep Dashboard</h1>
-        <p className="text-muted-foreground">Track and analyze your sleep patterns</p>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Sleep Dashboard</h1>
+          <p className="text-muted-foreground">Track and analyze your sleep patterns with clinical insights</p>
+        </div>
+        
+        <div className="flex gap-2">
+          <Link href="/dashboard/clinical-entry">
+            <Button size="sm" className="gap-2">
+              <Plus className="h-4 w-4" />
+              New Entry
+            </Button>
+          </Link>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>Average Sleep</CardTitle>
-            <CardDescription>Last 7 days</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">7.5 hrs</div>
-            <p className="text-sm text-muted-foreground">+0.5 hrs from last week</p>
-          </CardContent>
-        </Card>
+      {/* Main Dashboard Content */}
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="overview" className="gap-2">
+            <Activity className="h-4 w-4" />
+            Overview
+          </TabsTrigger>
+          
+          <TabsTrigger value="analytics" className="gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Analytics
+          </TabsTrigger>
+          
+          <TabsTrigger value="history" className="gap-2">
+            <Calendar className="h-4 w-4" />
+            History
+          </TabsTrigger>
+        </TabsList>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Sleep Quality</CardTitle>
-            <CardDescription>Average rating</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">8.2/10</div>
-            <p className="text-sm text-muted-foreground">Good quality sleep</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Entries</CardTitle>
-            <CardDescription>This month</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">15</div>
-            <p className="text-sm text-muted-foreground">5 more to goal</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Entries</CardTitle>
-          <CardDescription>Your latest sleep records</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div>
-                <p className="font-medium">December 28, 2024</p>
-                <p className="text-sm text-muted-foreground">
-                  11:30 PM - 7:00 AM • Quality: 9/10
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-6">
+          {/* Quick Metrics Summary */}
+          <AnalyticsSummary className="mb-6" />
+          
+          {/* Program Enrollment */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Start Your Clinical Sleep Assessment</CardTitle>
+              <CardDescription>
+                Begin with our 14-day Stanford-based clinical program for comprehensive sleep analysis
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 md:grid-cols-2">
+                <Link href="/dashboard/programs/enroll">
+                  <Button className="w-full h-auto p-4 text-left flex flex-col items-start gap-2">
+                    <div className="font-semibold">14-Day Stanford Sleep Program</div>
+                    <div className="text-sm text-muted-foreground">
+                      Comprehensive clinical assessment with progress tracking
+                    </div>
+                  </Button>
+                </Link>
+                
+                <Link href="/dashboard/clinical-entry">
+                  <Button variant="outline" className="w-full h-auto p-4 text-left flex flex-col items-start gap-2">
+                    <div className="font-semibold">Clinical Sleep Diary</div>
+                    <div className="text-sm text-muted-foreground">
+                      Individual clinical entry with detailed metrics
+                    </div>
+                  </Button>
+                </Link>
+              </div>
+              
+              <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                <p className="text-xs text-muted-foreground text-center">
+                  💡 <strong>Recommendation:</strong> Start with the 14-day program for the most comprehensive sleep analysis and personalized recommendations
                 </p>
               </div>
-              <Button variant="outline" size="sm">View</Button>
-            </div>
+            </CardContent>
+          </Card>
 
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div>
-                <p className="font-medium">December 27, 2024</p>
-                <p className="text-sm text-muted-foreground">
-                  12:00 AM - 7:30 AM • Quality: 7/10
-                </p>
+          {/* Recent Activity */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Sleep Entries</CardTitle>
+              <CardDescription>Your latest sleep records and patterns</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="text-center py-8 text-muted-foreground">
+                  <Calendar className="h-12 w-12 mx-auto mb-4" />
+                  <p>No sleep entries yet</p>
+                  <p className="text-sm">Start tracking your sleep to see insights here</p>
+                </div>
               </div>
-              <Button variant="outline" size="sm">View</Button>
-            </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div>
-                <p className="font-medium">December 26, 2024</p>
-                <p className="text-sm text-muted-foreground">
-                  10:45 PM - 6:30 AM • Quality: 8/10
-                </p>
+        {/* Analytics Tab */}
+        <TabsContent value="analytics" className="space-y-6">
+          <AnalyticsDashboard />
+        </TabsContent>
+
+        {/* History Tab */}
+        <TabsContent value="history" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Sleep History</CardTitle>
+              <CardDescription>Browse and manage your sleep entries</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8 text-muted-foreground">
+                <Calendar className="h-12 w-12 mx-auto mb-4" />
+                <p>No sleep history available</p>
+                <p className="text-sm">Start logging your sleep to build your history</p>
               </div>
-              <Button variant="outline" size="sm">View</Button>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <Link href="/dashboard/new-entry">
-              <Button className="w-full">Add New Sleep Entry</Button>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
