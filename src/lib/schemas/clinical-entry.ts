@@ -199,41 +199,52 @@ export const clinicalEntrySchema = z.object({
   daytimeMood: wellnessMetricSchema.default(5)
 }).refine((data) => {
   // Cross-step validations
-  
+
   // Sleep timing logic across multiple fields
+  const baseDate = new Date(data.date);
+  const nextDate = new Date(baseDate);
+  nextDate.setDate(nextDate.getDate() + 1);
+  const nextDateStr = nextDate.toISOString().split('T')[0];
+
   const timeInBed = new Date(`${data.date}T${data.timeInBed}`);
   const sleepAttemptTime = new Date(`${data.date}T${data.sleepAttemptTime}`);
-  const finalWakeTime = new Date(`${data.date}T${data.finalWakeTime}`);
-  const outOfBedTime = new Date(`${data.date}T${data.outOfBedTime}`);
-  
-  // Adjust for overnight sleep
-  if (finalWakeTime < sleepAttemptTime) {
-    finalWakeTime.setDate(finalWakeTime.getDate() + 1);
-  }
-  if (outOfBedTime < finalWakeTime) {
-    outOfBedTime.setDate(outOfBedTime.getDate() + 1);
-  }
-  
+
+  // Determine if wake times are on the next day (overnight sleep)
+  const finalWakeTimeHour = parseInt(data.finalWakeTime.split(':')[0]);
+  const sleepAttemptHour = parseInt(data.sleepAttemptTime.split(':')[0]);
+  const isOvernightSleep = finalWakeTimeHour < sleepAttemptHour ||
+    (finalWakeTimeHour === sleepAttemptHour && data.finalWakeTime < data.sleepAttemptTime);
+
+  const finalWakeTime = new Date(`${isOvernightSleep ? nextDateStr : data.date}T${data.finalWakeTime}`);
+  const outOfBedTime = new Date(`${isOvernightSleep ? nextDateStr : data.date}T${data.outOfBedTime}`);
+
   // Basic time sequence validation
-  return sleepAttemptTime >= timeInBed && 
-         finalWakeTime >= sleepAttemptTime && 
+  return sleepAttemptTime >= timeInBed &&
+         finalWakeTime >= sleepAttemptTime &&
          outOfBedTime >= finalWakeTime;
 }, {
   message: 'Sleep timing sequence is invalid',
   path: ['sleepAttemptTime']
 }).refine((data) => {
   // Sleep efficiency validation (rough check)
+  const baseDate = new Date(data.date);
+  const nextDate = new Date(baseDate);
+  nextDate.setDate(nextDate.getDate() + 1);
+  const nextDateStr = nextDate.toISOString().split('T')[0];
+
   const timeInBed = new Date(`${data.date}T${data.timeInBed}`);
-  const outOfBed = new Date(`${data.date}T${data.outOfBedTime}`);
-  
-  // Adjust for overnight
-  if (outOfBed <= timeInBed) {
-    outOfBed.setDate(outOfBed.getDate() + 1);
-  }
-  
+
+  // Determine if this is overnight sleep
+  const outOfBedHour = parseInt(data.outOfBedTime.split(':')[0]);
+  const timeInBedHour = parseInt(data.timeInBed.split(':')[0]);
+  const isOvernight = outOfBedHour < timeInBedHour ||
+    (outOfBedHour === timeInBedHour && data.outOfBedTime <= data.timeInBed);
+
+  const outOfBed = new Date(`${isOvernight ? nextDateStr : data.date}T${data.outOfBedTime}`);
+
   const timeInBedMinutes = (outOfBed.getTime() - timeInBed.getTime()) / (1000 * 60);
   const totalSleepMinutes = (data.totalSleepHours * 60) + data.totalSleepMins;
-  
+
   // Sleep efficiency shouldn't exceed 100%
   return totalSleepMinutes <= timeInBedMinutes;
 }, {

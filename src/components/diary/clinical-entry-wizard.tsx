@@ -164,12 +164,23 @@ export function ClinicalEntryWizard({
 
   const validateCurrentData = () => {
     try {
+      // Handle overnight sleep by checking if wake times are earlier than sleep times
+      const baseDate = formData.date;
+      const nextDate = new Date(baseDate);
+      nextDate.setDate(nextDate.getDate() + 1);
+      const nextDateStr = nextDate.toISOString().split('T')[0];
+
+      const finalWakeTimeHour = parseInt(formData.finalWakeTime.split(':')[0]);
+      const sleepAttemptHour = parseInt(formData.sleepAttemptTime.split(':')[0]);
+      const isOvernightSleep = finalWakeTimeHour < sleepAttemptHour ||
+        (finalWakeTimeHour === sleepAttemptHour && formData.finalWakeTime < formData.sleepAttemptTime);
+
       const clinicalInput: ClinicalSleepEntryInput = {
         date: new Date(formData.date),
         timeInBed: new Date(`${formData.date}T${formData.timeInBed}`),
         sleepAttemptTime: new Date(`${formData.date}T${formData.sleepAttemptTime}`),
-        finalWakeTime: new Date(`${formData.date}T${formData.finalWakeTime}`),
-        outOfBedTime: new Date(`${formData.date}T${formData.outOfBedTime}`),
+        finalWakeTime: new Date(`${isOvernightSleep ? nextDateStr : baseDate}T${formData.finalWakeTime}`),
+        outOfBedTime: new Date(`${isOvernightSleep ? nextDateStr : baseDate}T${formData.outOfBedTime}`),
         totalSleepHours: formData.totalSleepHours,
         totalSleepMins: formData.totalSleepMins,
         sleepLatencyHours: formData.sleepLatencyHours,

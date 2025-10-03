@@ -1,22 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth/auth.config';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
-import { 
-  ClinicalValidator, 
+import {
+  ClinicalValidator,
   ClinicalCalculations,
   SleepProgramService,
-  type ClinicalSleepEntryInput 
+  type ClinicalSleepEntryInput
 } from '@/lib/clinical';
-import { 
+import {
   clinicalEntrySchema,
-  type ClinicalEntryData 
+  type ClinicalEntryData
 } from '@/lib/schemas/clinical-entry';
 
 export async function POST(request: NextRequest) {
   try {
     // Check authentication
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -45,12 +46,29 @@ export async function POST(request: NextRequest) {
     }
 
     // Convert form data to clinical validation format
+    // Handle overnight sleep by checking if wake times are earlier than sleep times
+    const baseDate = validatedData.date;
+    const nextDate = new Date(baseDate);
+    nextDate.setDate(nextDate.getDate() + 1);
+    const nextDateStr = nextDate.toISOString().split('T')[0];
+
+    const timeInBed = new Date(`${baseDate}T${validatedData.timeInBed}`);
+    const sleepAttemptTime = new Date(`${baseDate}T${validatedData.sleepAttemptTime}`);
+
+    // If final wake time appears to be before sleep attempt time, it's the next day
+    const finalWakeTimeHour = parseInt(validatedData.finalWakeTime.split(':')[0]);
+    const sleepAttemptHour = parseInt(validatedData.sleepAttemptTime.split(':')[0]);
+    const isOvernightSleep = finalWakeTimeHour < sleepAttemptHour || (finalWakeTimeHour === sleepAttemptHour && validatedData.finalWakeTime < validatedData.sleepAttemptTime);
+
+    const finalWakeTime = new Date(`${isOvernightSleep ? nextDateStr : baseDate}T${validatedData.finalWakeTime}`);
+    const outOfBedTime = new Date(`${isOvernightSleep ? nextDateStr : baseDate}T${validatedData.outOfBedTime}`);
+
     const clinicalInput: ClinicalSleepEntryInput = {
       date: new Date(validatedData.date),
-      timeInBed: new Date(`${validatedData.date}T${validatedData.timeInBed}`),
-      sleepAttemptTime: new Date(`${validatedData.date}T${validatedData.sleepAttemptTime}`),
-      finalWakeTime: new Date(`${validatedData.date}T${validatedData.finalWakeTime}`),
-      outOfBedTime: new Date(`${validatedData.date}T${validatedData.outOfBedTime}`),
+      timeInBed,
+      sleepAttemptTime,
+      finalWakeTime,
+      outOfBedTime,
       totalSleepHours: validatedData.totalSleepHours,
       totalSleepMins: validatedData.totalSleepMins,
       sleepLatencyHours: validatedData.sleepLatencyHours,
@@ -213,7 +231,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // Check authentication
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Authentication required' },

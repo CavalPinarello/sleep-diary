@@ -5,6 +5,7 @@ import { BarChart3, Activity, Calendar, Plus } from "lucide-react";
 import Link from "next/link";
 
 import { AnalyticsDashboard, AnalyticsSummary } from "@/components/analytics/analytics-dashboard";
+import { SleepHistory } from "@/components/dashboard/sleep-history";
 
 export default function DashboardPage() {
   return (
@@ -94,13 +95,7 @@ export default function DashboardPage() {
               <CardDescription>Your latest sleep records and patterns</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="text-center py-8 text-muted-foreground">
-                  <Calendar className="h-12 w-12 mx-auto mb-4" />
-                  <p>No sleep entries yet</p>
-                  <p className="text-sm">Start tracking your sleep to see insights here</p>
-                </div>
-              </div>
+              <SleepHistory />
             </CardContent>
           </Card>
         </TabsContent>
@@ -118,11 +113,7 @@ export default function DashboardPage() {
               <CardDescription>Browse and manage your sleep entries</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <Calendar className="h-12 w-12 mx-auto mb-4" />
-                <p>No sleep history available</p>
-                <p className="text-sm">Start logging your sleep to build your history</p>
-              </div>
+              <SleepHistory />
             </CardContent>
           </Card>
         </TabsContent>
