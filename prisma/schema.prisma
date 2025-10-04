@@ -45,6 +45,7 @@ model User {
   emailVerified DateTime?
   name          String?
   image         String?
+  password      String?   // For credentials provider
   accounts      Account[]
   sessions      Session[]
   sleepEntries  SleepEntry[]
