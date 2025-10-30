@@ -26,6 +26,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <Link href="/dashboard/analytics" className="text-sm font-medium hover:text-primary">
                   Analytics
                 </Link>
+                <Link href="/dashboard/fountain-pen" className="text-sm font-medium hover:text-primary">
+                  Fountain Pen
+                </Link>
               </nav>
             </div>
             <div className="flex items-center gap-4">
